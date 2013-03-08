@@ -136,7 +136,6 @@ class XPool
     end
     process = @pool.reject(&:dead?).sort_by(&:frequency).first
     process.schedule unit, *args
-  end
 
   end
 
