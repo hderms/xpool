@@ -55,7 +55,7 @@ class XPool::Process
   # @return [XPool::Process]
   #   Returns self
   #
-  def schedule(unit, *args)
+  def schedule(unit,*args)
     if dead?
       raise RuntimeError,
         "cannot schedule work on a dead process (with ID: #{@id})"
@@ -98,7 +98,7 @@ class XPool::Process
     @dead
   end
 
-  private
+private
   def _shutdown(sig)
     Process.kill sig, @id
     Process.wait @id
