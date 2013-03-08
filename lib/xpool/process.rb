@@ -105,7 +105,7 @@ private
     @dead = true
   end
 
-  def spawn(retries = nil)
+  def spawn
     fork do
       trap :SIGUSR1 do
         XPool.log "#{::Process.pid} got request to shutdown."
@@ -130,9 +130,9 @@ private
         @busy_channel.put false
 
         unless exceeds_max_retries? or reschedule_disabled?
-          spawn(@retries)
+          spawn
         else
-        XPool.log "#{::Process.pid} can't be rescheduled reschedule."
+          XPool.log "#{::Process.pid} can't be rescheduled reschedule."
         end
       end
     end

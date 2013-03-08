@@ -55,7 +55,7 @@ class XPool
   #
   def broadcast(unit, *args)
     @pool.map do |process|
-      process.schedule unit,   *args
+      process.schedule unit, *args
     end
   end
 
