@@ -121,9 +121,7 @@ class XPool::Process
   end
 
   def read_loop
-    puts "not readable"
     if @channel.readable?
-      puts "readable"
       @busy_channel.put true
       msg = @channel.get
       begin

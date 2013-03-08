@@ -135,11 +135,8 @@ class XPool
         "cannot schedule work with no subprocesses running"
     end
     process = @pool.reject(&:dead?).sort_by(&:frequency).first
-    process.schedule unit,  *args
-  end
-
-  def reschedule
     process.schedule unit, *args
+  end
 
   end
 
