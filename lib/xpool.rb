@@ -55,7 +55,7 @@ class XPool
   #
   def broadcast(unit, *args)
     @pool.map do |process|
-      process.schedule unit, *args
+      process.schedule unit,   *args
     end
   end
 
@@ -135,7 +135,12 @@ class XPool
         "cannot schedule work with no subprocesses running"
     end
     process = @pool.reject(&:dead?).sort_by(&:frequency).first
+    process.schedule unit,  *args
+  end
+
+  def reschedule
     process.schedule unit, *args
+
   end
 
   #

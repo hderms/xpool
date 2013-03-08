@@ -1,4 +1,5 @@
 class XPool::Process
+  MAX_RETRIES = 3
   #
   # @return [XPool::Process]
   #   Returns an instance of XPool::Process
@@ -54,7 +55,7 @@ class XPool::Process
   # @return [XPool::Process]
   #   Returns self
   #
-  def schedule(unit,*args)
+  def schedule(unit, *args)
     if dead?
       raise RuntimeError,
         "cannot schedule work on a dead process (with ID: #{@id})"
@@ -97,28 +98,45 @@ class XPool::Process
     @dead
   end
 
-private
+  private
   def _shutdown(sig)
     Process.kill sig, @id
     Process.wait @id
     @dead = true
   end
 
-  def spawn
+  def spawn(retries = nil)
     fork do
       trap :SIGUSR1 do
         XPool.log "#{::Process.pid} got request to shutdown."
         @shutdown_requested = true
       end
-      loop &method(:read_loop)
+      begin
+        @retries = 0 and (@retries + 1)
+        loop &method(:read_loop)
+      rescue StandardError => e
+        XPool.log "#{::Process.pid} failed due to exception: #{e}."
+      end
     end
   end
 
   def read_loop
+    puts "not readable"
     if @channel.readable?
+      puts "readable"
       @busy_channel.put true
       msg = @channel.get
-      msg[:unit].run *msg[:args]
+      begin
+        msg[:unit].run *msg[:args]
+      rescue StandardError => e
+        @busy_channel.put false
+
+        unless exceeds_max_retries? or reschedule_disabled?
+          spawn(@retries)
+        else
+        XPool.log "#{::Process.pid} can't be rescheduled reschedule."
+        end
+      end
     end
   ensure
     @busy_channel.put false
@@ -126,5 +144,11 @@ private
       XPool.log "#{::Process.pid} is about to exit."
       exit 0
     end
+  end
+  def reschedule_disabled?
+    false
+  end
+  def exceeds_max_retries? 
+    @retries >= MAX_RETRIES
   end
 end
